@@ -7,10 +7,10 @@ inputs:
     description: Workflow file (e.g. deploy.yml) whose last successful run determines the base commit
     required: false
   include-paths:
-    description: Whitespace/newline separated list of Git pathspecs to include
+    description: Newline separated list of Git pathspecs to include
     required: true
   exclude-paths:
-    description: Whitespace/newline separated list of Git pathspecs to exclude
+    description: Newline separated list of Git pathspecs to exclude
     required: false
     default: ""
 
@@ -101,12 +101,14 @@ runs:
           exit 1
         fi
 
+        # New: only split on newlines so patterns may contain spaces.
         norm_list () {
-          printf "%s" "$1" | tr ' \t' '\n' | sed '/^$/d' | sort -u
+          # Read stdin, trim leading/trailing whitespace, drop empty lines, dedupe.
+          sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u
         }
 
-        mapfile -t INCLUDES < <(norm_list "$INCLUDE_RAW")
-        mapfile -t EXCLUDES < <(norm_list "$EXCLUDE_RAW")
+        mapfile -t INCLUDES < <(printf "%s\n" "$INCLUDE_RAW" | norm_list)
+        mapfile -t EXCLUDES < <(printf "%s\n" "$EXCLUDE_RAW" | norm_list)
 
         echo "Include patterns:"
         printf '  %s\n' "${INCLUDES[@]}"

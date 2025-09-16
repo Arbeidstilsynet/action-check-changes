@@ -21,8 +21,8 @@ The job must have permission for `actions: read` for the action to retrieve run 
 | Name            | Required | Default       | Description                                                                                                                                                                 |
 |-----------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `workflow-file` | No       | (auto-detect) | Workflow filename whose last successful run determines the base commit. If omitted, auto-detected from `GITHUB_WORKFLOW_REF`; if none found falls back to repo root commit. |
-| `include-paths` | Yes      | —             | Whitespace/newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                               |
-| `exclude-paths` | No       | (empty)       | Whitespace/newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                            |
+| `include-paths` | Yes      | —             | Newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                               |
+| `exclude-paths` | No       | (empty)       | Newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                            |
 
 ## Outputs
 
@@ -57,8 +57,9 @@ jobs:
       - uses: Arbeidstilsynet/action-check-changes@v1
         id: changes
         with:
-          # can be space separated or multiline
-          include-paths: "apps/web .github/workflows/deploy.yml"
+          include-paths: |
+            apps/web
+            .github/workflows/deploy.yml
           exclude-paths: |
             **/README.md
             apps/web/docs/

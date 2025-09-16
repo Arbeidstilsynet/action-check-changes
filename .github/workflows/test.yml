@@ -17,7 +17,8 @@ jobs:
       - uses: "./"
         id: changes
         with:
-          include-paths: "."
+          include-paths: |
+            .
           exclude-paths: |
             .github/workflows/
             README.md
