@@ -1,10 +1,8 @@
-# Arbeidstilsynet/action-noop
+# Arbeidstilsynet/action-check-changes
 
-> **Note:** This is a template repository for creating simple composite GitHub Actions.
->
-> After creating the new repo you should enable "Allow auto-merge" and "Automatically delete head branches" in Settings -> General -> Pull Requests.
+Action to check for changes to files since last successful workflow run.
 
-A no-op GitHub Action that echoes inputs and sets outputs.
+This action can be used for safe continuous delivery/deployment taking into consideration previous runs.
 
 ## Versioning
 
@@ -14,46 +12,61 @@ If you have to make breaking changes to the action, bump the version.
 
 ## Requirements
 
-- None
+Requires full commit history. When configuring [actions/checkout](https://github.com/actions/checkout), make sure to set `fetch-depth: 0`.
+
+The job must have permission for `actions: read` for the action to retrieve run history through the GitHub API.
 
 ## Inputs
 
-| Name         | Description        | Required | Default         |
-|--------------|--------------------|----------|-----------------|
-| `input-one`  | First input value  | Yes      |                 |
-| `input-two`  | Second input value | No       | `default-value` |
+| Name            | Required | Default       | Description                                                                                                                                                                 |
+|-----------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `workflow-file` | No       | (auto-detect) | Workflow filename whose last successful run determines the base commit. If omitted, auto-detected from `GITHUB_WORKFLOW_REF`; if none found falls back to repo root commit. |
+| `include-paths` | Yes      | —             | Whitespace/newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                               |
+| `exclude-paths` | No       | (empty)       | Whitespace/newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                            |
 
 ## Outputs
 
-| Name        | Description           |
-|-------------|-----------------------|
-| `output-one`| Echo of input-one     |
-| `output-two`| Echo of input-two     |
+| Name            | Description                                                                                           |
+|-----------------|-------------------------------------------------------------------------------------------------------|
+| `changed`       | `true` if any included (and not excluded) paths changed between base and head.                        |
+| `base_sha`      | The base commit SHA used for the diff (last successful run’s head, or fallback).                      |
+| `head_sha`      | The current commit SHA.                                                                               |
+| `changed_files` | Newline separated list of changed files after exclusions. URL-escaped newlines in raw output context. |
 
 ## Usage
 
 ```yaml
-name: Example No-op Action Usage
-
 on:
   push:
     branches:
       - main
 
 jobs:
-  noop-job:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: Arbeidstilsynet/action-check-changes@v1
+        id: changes
+        with:
+          # can be space separated or multiline
+          include-paths: "apps/web .github/workflows/deploy.yml"
+          exclude-paths: |
+            **/README.md
+            apps/web/docs/
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: Arbeidstilsynet/action-noop@v1
-        id: noop
-        with:
-          input-one: "Hello"
-          input-two: "World"
-
-      - name: Show outputs
-        run: |
-          echo "Output one: ${{ steps.noop.outputs.output-one }}"
-          echo "Output two: ${{ steps.noop.outputs.output-two }}"
+      - run: echo "insert deploy here"
 ```
