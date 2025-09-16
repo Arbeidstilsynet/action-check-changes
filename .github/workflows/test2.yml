@@ -1,0 +1,43 @@
+on:
+  push:
+    branches:
+      - feat/never-ran-this-before
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: "./"
+        id: changes
+        with:
+          token: ${{ github.token }}
+          include-paths: |
+            .
+          exclude-paths: |
+            .github/workflows/
+            README.md
+
+      - run: |
+          echo "Changed: ${{ steps.changes.outputs.changed }}"
+          echo "Base SHA: ${{ steps.changes.outputs.base_sha }}"
+          echo "Head SHA: ${{ steps.changes.outputs.head_sha }}"
+          echo "Changed files: ${{ steps.changes.outputs.changed_files }}"
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - run: echo "insert deploy here"
