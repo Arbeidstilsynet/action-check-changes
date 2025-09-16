@@ -1,0 +1,32 @@
+name: "No-op Action"
+author: "Arbeidstilsynet"
+description: "A no-op GitHub Action that echoes inputs and sets outputs."
+
+inputs:
+  input-one:
+    description: "First input value"
+    required: true
+  input-two:
+    description: "Second input value"
+    required: false
+    default: "default-value"
+
+outputs:
+  output-one:
+    description: "Echo of input-one"
+    value: ${{ steps.noop.outputs.output-one }}
+  output-two:
+    description: "Echo of input-two"
+    value: ${{ steps.noop.outputs.output-two }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Echo inputs and set outputs
+      id: noop
+      shell: bash
+      run: |
+        echo "input-one: ${{ inputs.input-one }}"
+        echo "input-two: ${{ inputs.input-two }}"
+        echo "output-one=${{ inputs.input-one }}" >> $GITHUB_OUTPUT
+        echo "output-two=${{ inputs.input-two }}" >> $GITHUB_OUTPUT

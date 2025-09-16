@@ -1,0 +1,28 @@
+name: Tag Action
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "action.yml"
+      - "VERSION"
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+
+      - name: Read VERSION file
+        id: version
+        run: |
+          version=$(cat VERSION | tr -d ' \r\n')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Create or update tag from VERSION
+        run: |
+          git tag -f ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }} --force
