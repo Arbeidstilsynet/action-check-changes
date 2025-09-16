@@ -20,7 +20,6 @@ jobs:
       - uses: "./"
         id: changes
         with:
-          token: ${{ github.token }}
           include-paths: |
             .
           exclude-paths: |

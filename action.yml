@@ -3,9 +3,6 @@ author: "Arbeidstilsynet"
 description: "Check if specified paths changed since last successful run of a workflow"
 
 inputs:
-  token:
-    description: "GitHub token for API access (Actions:Read)"
-    required: true
   include-paths:
     description: Newline separated list of Git pathspecs to include
     required: true
