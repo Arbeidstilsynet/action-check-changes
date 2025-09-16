@@ -145,11 +145,7 @@ runs:
         if [ -s /tmp/changed_files ]; then
           CHANGED=true
         else
-          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "${INCLUDES[@]}" "${EXCLUDE_SPEC[@]}"; then
-            CHANGED=false
-          else
-            CHANGED=true
-          fi
+          CHANGED=false
         fi
 
         echo "Changed: $CHANGED"
