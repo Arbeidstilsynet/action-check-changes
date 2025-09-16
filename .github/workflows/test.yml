@@ -26,6 +26,7 @@ jobs:
           exclude-paths: |
             .github/workflows/
             README.md
+            somefile
 
       - run: |
           echo "Changed: ${{ steps.changes.outputs.changed }}"
