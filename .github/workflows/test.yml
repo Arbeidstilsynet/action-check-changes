@@ -11,7 +11,7 @@ jobs:
       contents: read
       actions: read
     outputs:
-      changes: ${{ steps.changes.outputs.changed }}
+      changed: ${{ steps.changes.outputs.changed }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -20,6 +20,7 @@ jobs:
       - uses: "./"
         id: changes
         with:
+          token: ${{ github.token }}
           include-paths: |
             .
           exclude-paths: |
@@ -34,7 +35,7 @@ jobs:
 
   deploy:
     needs: check
-    if: needs.check.outputs.changes == 'true'
+    if: needs.check.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

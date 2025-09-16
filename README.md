@@ -20,9 +20,10 @@ The job must have permission for `actions: read` for the action to retrieve run 
 
 | Name            | Required | Default       | Description                                                                                                                                                                 |
 |-----------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `token`         | Yes      |               | GitHub token for API access (Actions:Read)                                                                                                                                  |
+| `include-paths` | Yes      |               | Newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                                          |
+| `exclude-paths` | No       | (empty)       | Newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                                       |
 | `workflow-file` | No       | (auto-detect) | Workflow filename whose last successful run determines the base commit. If omitted, auto-detected from `GITHUB_WORKFLOW_REF`; if none found falls back to repo root commit. |
-| `include-paths` | Yes      | —             | Newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                               |
-| `exclude-paths` | No       | (empty)       | Newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                            |
 
 ## Outputs
 
@@ -57,6 +58,7 @@ jobs:
       - uses: Arbeidstilsynet/action-check-changes@v1
         id: changes
         with:
+          token: ${{ github.token }}
           include-paths: |
             apps/web
             .github/workflows/deploy.yml

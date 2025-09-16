@@ -3,9 +3,9 @@ author: "Arbeidstilsynet"
 description: "Check if specified paths changed since last successful run of a workflow"
 
 inputs:
-  workflow-file:
-    description: Workflow file (e.g. deploy.yml) whose last successful run determines the base commit
-    required: false
+  token:
+    description: "GitHub token for API access (Actions:Read)"
+    required: true
   include-paths:
     description: Newline separated list of Git pathspecs to include
     required: true
@@ -13,6 +13,9 @@ inputs:
     description: Newline separated list of Git pathspecs to exclude
     required: false
     default: ""
+  workflow-file:
+    description: Workflow file (e.g. deploy.yml) whose last successful run determines the base commit
+    required: false
 
 outputs:
   changed:
@@ -35,7 +38,7 @@ runs:
       id: base
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
 
