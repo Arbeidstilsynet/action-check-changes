@@ -39,8 +39,6 @@ runs:
       run: |
         set -euo pipefail
 
-        exit 1 # TEMP FAIL
-
         # Resolve workflow file (input or auto-detect)
         if [ -n "${{ inputs.workflow-file }}" ]; then
           WF_FILE='${{ inputs.workflow-file }}'
