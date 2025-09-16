@@ -38,7 +38,7 @@ runs:
       id: base
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
 
