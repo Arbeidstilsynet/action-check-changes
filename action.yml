@@ -42,43 +42,45 @@ runs:
       run: |
         set -euo pipefail
 
-        # Prefer explicit input; otherwise derive from GITHUB_WORKFLOW_REF:
-        # Example GITHUB_WORKFLOW_REF: owner/repo/.github/workflows/test.yml@refs/heads/branch
+        # Resolve workflow file (input or auto-detect)
         if [ -n "${{ inputs.workflow-file }}" ]; then
           WF_FILE='${{ inputs.workflow-file }}'
-          echo "Using provided workflow-file input: $WF_FILE"
         else
           WF_FILE=$(echo "${GITHUB_WORKFLOW_REF:-}" | sed -n 's#.*/\.github/workflows/\([^@]*\)@.*#\1#p')
-          if [ -n "$WF_FILE" ]; then
-            echo "Auto-detected workflow file: $WF_FILE"
-          else
-            echo "Could not auto-detect workflow file (GITHUB_WORKFLOW_REF='${GITHUB_WORKFLOW_REF:-}'). Will skip API lookup."
-          fi
         fi
-
-        BRANCH="${{ github.ref_name }}"
-        BASE_SHA=""
-        HEAD_SHA=$(git rev-parse HEAD)
 
         if [ -n "$WF_FILE" ]; then
-          echo "Locating last successful run for $WF_FILE on branch $BRANCH"
-          JSON=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs" \
-                  -f branch="$BRANCH" -f status=completed 2>/dev/null || echo '{}')
-
-          LAST_SUCCESS=$(echo "$JSON" | jq -r '
-            (.workflow_runs? // [])
-            | map(select(.conclusion=="success")) | .[0].head_sha // empty')
-
-          if [ -n "$LAST_SUCCESS" ]; then
-            BASE_SHA="$LAST_SUCCESS"
-          fi
+          echo "Workflow file: $WF_FILE"
         else
-          echo "Skipping workflow run lookup (no workflow file)."
+          echo "No workflow file name available (cannot query runs)."
         fi
 
-        if [ -z "$BASE_SHA" ]; then
-          echo "No previous successful run found; falling back to root commit."
+        BRANCH='${{ github.ref_name }}'
+        HEAD_SHA=$(git rev-parse HEAD)
+        BASE_SHA=""
+        LAST_SUCCESS=""
+
+        if [ -n "$WF_FILE" ] && command -v gh >/dev/null 2>&1; then
+          echo "Fetching workflow runs (branch=$BRANCH)..."
+          # Keep branch filter so we only look at this branch
+          WORKFLOW_RUNS=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs" \
+                            -f branch="$BRANCH" 2>/dev/null || echo "")
+          if [ -z "$WORKFLOW_RUNS" ]; then
+            echo "No workflow runs found (first run, permission issue, or filename mismatch)."
+          else
+            echo "Found workflow runs, filtering successful ones..."
+            LAST_SUCCESS=$(echo "$WORKFLOW_RUNS" | jq -r '.workflow_runs[] | select(.conclusion=="success") | .head_sha' | head -n 1 || echo "")
+            echo "Last successful commit SHA: ${LAST_SUCCESS:-none}"
+          fi
+        else
+          echo "Skipping API lookup (missing workflow file or gh CLI)."
+        fi
+
+        if [ -z "$LAST_SUCCESS" ]; then
+          echo "No previous successful run; using first commit as base."
           BASE_SHA=$(git rev-list --max-parents=0 HEAD)
+        else
+          BASE_SHA="$LAST_SUCCESS"
         fi
 
         echo "Base SHA: $BASE_SHA"
