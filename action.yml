@@ -60,7 +60,7 @@ runs:
         if [ -n "$WF_FILE" ]; then
           echo "Locating last successful run for $WF_FILE on branch $BRANCH"
           JSON=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs" \
-                  -f branch="$BRANCH" -f status=completed -F per_page=20 2>/dev/null || echo '{}')
+                  -f branch="$BRANCH" -f status=completed 2>/dev/null || echo '{}')
 
           LAST_SUCCESS=$(echo "$JSON" | jq -r '
             (.workflow_runs? // [])
