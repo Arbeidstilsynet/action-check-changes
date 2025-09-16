@@ -62,15 +62,25 @@ runs:
 
         if [ -n "$WF_FILE" ] && command -v gh >/dev/null 2>&1; then
           echo "Fetching workflow runs (branch=$BRANCH)..."
-          # Keep branch filter so we only look at this branch
-          WORKFLOW_RUNS=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs" \
-                            -f branch="$BRANCH" 2>/dev/null || echo "")
-          echo "Workflow runs JSON: ${WORKFLOW_RUNS:-<empty>}"
-          if [ -z "$WORKFLOW_RUNS" ]; then
-            echo "No workflow runs found (first run, permission issue, or filename mismatch)."
+          API_OUTPUT=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs" -f branch="$BRANCH" 2>&1)
+          RC=$?
+          if [ $RC -ne 0 ]; then
+            if echo "$API_OUTPUT" | grep -q '"status": *"404"' || echo "$API_OUTPUT" | grep -qi 'Not Found'; then
+              echo "Workflow not found (404) - treating as no prior runs."
+              API_OUTPUT=""
+            else
+              echo "gh api failed (exit $RC). Output:"
+              echo "$API_OUTPUT"
+              exit 1
+            fi
+          fi
+
+          if [ -z "$API_OUTPUT" ]; then
+            echo "No workflow runs data."
           else
-            echo "Found workflow runs, filtering successful ones..."
-            LAST_SUCCESS=$(echo "$WORKFLOW_RUNS" | jq -r '.workflow_runs[] | select(.conclusion=="success") | .head_sha' | head -n 1 || echo "")
+            RUNS=$(echo "$API_OUTPUT" | jq -r '(.workflow_runs? // []) | length' 2>/dev/null || echo 0)
+            echo "Detected $RUNS run(s)."
+            LAST_SUCCESS=$(echo "$API_OUTPUT" | jq -r '(.workflow_runs? // []) | map(select(.conclusion=="success")) | .[0].head_sha // empty' 2>/dev/null || echo "")
             echo "Last successful commit SHA: ${LAST_SUCCESS:-none}"
           fi
         else
