@@ -65,6 +65,7 @@ runs:
           # Keep branch filter so we only look at this branch
           WORKFLOW_RUNS=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs" \
                             -f branch="$BRANCH" 2>/dev/null || echo "")
+          echo "Workflow runs JSON: ${WORKFLOW_RUNS:-<empty>}"
           if [ -z "$WORKFLOW_RUNS" ]; then
             echo "No workflow runs found (first run, permission issue, or filename mismatch)."
           else
