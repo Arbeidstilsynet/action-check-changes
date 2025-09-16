@@ -19,9 +19,8 @@ jobs:
         with:
           include-paths: "."
           exclude-paths: |
-            ^docs/
-            ^\.github/workflows/
-            ^README\.md$
+            .github/workflows/
+            README.md
 
       - run: |
           echo "Changed: ${{ steps.changes.outputs.changed }}"
