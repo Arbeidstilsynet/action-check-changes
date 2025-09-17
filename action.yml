@@ -15,7 +15,7 @@ inputs:
     required: false
 
 outputs:
-  changed:
+  changes_detected:
     description: "true if any included (and not excluded) paths changed"
     value: ${{ steps.diff.outputs.changed }}
   base_sha:

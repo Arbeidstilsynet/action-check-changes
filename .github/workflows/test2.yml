@@ -27,7 +27,7 @@ jobs:
             README.md
 
       - run: |
-          echo "Changed: ${{ steps.changes.outputs.changed }}"
+          echo "Changed: ${{ steps.changes.outputs.changes_detected }}"
           echo "Base SHA: ${{ steps.changes.outputs.base_sha }}"
           echo "Head SHA: ${{ steps.changes.outputs.head_sha }}"
           echo "Changed files: ${{ steps.changes.outputs.changed_files }}"

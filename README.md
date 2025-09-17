@@ -26,12 +26,12 @@ The job must have permission for `actions: read` for the action to retrieve run 
 
 ## Outputs
 
-| Name            | Description                                                                                           |
-|-----------------|-------------------------------------------------------------------------------------------------------|
-| `changed`       | `true` if any included (and not excluded) paths changed between base and head.                        |
-| `base_sha`      | The base commit SHA used for the diff (last successful run’s head, or fallback).                      |
-| `head_sha`      | The current commit SHA.                                                                               |
-| `changed_files` | Newline separated list of changed files after exclusions. URL-escaped newlines in raw output context. |
+| Name               | Description                                                                                           |
+|--------------------|-------------------------------------------------------------------------------------------------------|
+| `changes_detected` | `true` if any included (and not excluded) paths changed between base and head.                        |
+| `base_sha`         | The base commit SHA used for the diff (last successful run’s head, or fallback).                      |
+| `head_sha`         | The current commit SHA.                                                                               |
+| `changed_files`    | Newline separated list of changed files after exclusions. URL-escaped newlines in raw output context. |
 
 ## Usage
 
@@ -48,7 +48,7 @@ jobs:
       contents: read
       actions: read
     outputs:
-      changed: ${{ steps.changes.outputs.changed }}
+      changed: ${{ steps.changes.outputs.changes_detected }}
     steps:
       - uses: actions/checkout@v5
         with:
