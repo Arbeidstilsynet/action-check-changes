@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - feat/add-action
+      - fix/revert-api-debug
 
 jobs:
   check:
