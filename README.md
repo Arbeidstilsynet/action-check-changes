@@ -20,8 +20,8 @@ The job must have permission for `actions: read` for the action to retrieve run 
 
 | Name            | Required | Default       | Description                                                                                                                                                                 |
 |-----------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `include-paths` | Yes      |               | Newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                                          |
-| `exclude-paths` | No       | (empty)       | Newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                                       |
+| `include`       | Yes      |               | Newline separated Git pathspecs (globs) to include in the diff scope (e.g. `src/`, `app/**/*.ts`).                                                                          |
+| `exclude`       | No       | (empty)       | Newline separated Git pathspecs to exclude. Each is applied as `:(exclude)<pattern>`.                                                                                       |
 | `workflow-file` | No       | (auto-detect) | Workflow filename whose last successful run determines the base commit. If omitted, auto-detected from `GITHUB_WORKFLOW_REF`; if none found falls back to repo root commit. |
 
 ## Outputs

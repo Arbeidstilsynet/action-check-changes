@@ -3,10 +3,10 @@ author: "Arbeidstilsynet"
 description: "Check if specified paths changed since last successful run of a workflow"
 
 inputs:
-  include-paths:
+  include:
     description: Newline separated list of Git pathspecs to include
     required: true
-  exclude-paths:
+  exclude:
     description: Newline separated list of Git pathspecs to exclude
     required: false
     default: ""
@@ -110,8 +110,8 @@ runs:
         set -euo pipefail
         BASE_SHA='${{ steps.base.outputs.base_sha }}'
         HEAD_SHA='${{ steps.base.outputs.head_sha }}'
-        INCLUDE_RAW='${{ inputs.include-paths }}'
-        EXCLUDE_RAW='${{ inputs.exclude-paths }}'
+        INCLUDE_RAW='${{ inputs.include }}'
+        EXCLUDE_RAW='${{ inputs.exclude }}'
 
         if [ -z "$INCLUDE_RAW" ]; then
           echo "No include paths provided" >&2

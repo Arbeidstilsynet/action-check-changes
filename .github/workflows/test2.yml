@@ -20,9 +20,9 @@ jobs:
       - uses: "Arbeidstilsynet/action-check-changes@feat/add-action"
         id: changes
         with:
-          include-paths: |
+          include: |
             .
-          exclude-paths: |
+          exclude: |
             .github/workflows/
             README.md
 
