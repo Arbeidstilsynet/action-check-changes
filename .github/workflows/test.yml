@@ -20,10 +20,9 @@ jobs:
       - uses: "./"
         id: changes
         with:
-          include-paths: |
-            .
+          include-paths: .github/workflows/
           exclude-paths: |
-            .github/workflows/
+            .github/workflows/test2.yml
             README.md
             somefile
 
@@ -35,7 +34,7 @@ jobs:
 
   deploy:
     needs: check
-    if: needs.check.outputs.changed == 'true'
+    if: needs.check.outputs.changes_detected == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
