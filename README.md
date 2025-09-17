@@ -57,10 +57,10 @@ jobs:
       - uses: Arbeidstilsynet/action-check-changes@v1
         id: changes
         with:
-          include-paths: |
+          include: |
             apps/web
             .github/workflows/deploy.yml
-          exclude-paths: |
+          exclude: |
             **/README.md
             apps/web/docs/
 
