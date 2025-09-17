@@ -64,6 +64,9 @@ runs:
           RC=$?
           set -e
 
+          echo "RC=$RC"
+          echo "API_OUTPUT=$API_OUTPUT"
+
           if [ $RC -ne 0 ]; then
             if echo "$API_OUTPUT" | grep -q '"status": *"404"' || echo "$API_OUTPUT" | grep -qi 'Not Found'; then
               echo "Workflow not found (404) - treating as no prior runs."
