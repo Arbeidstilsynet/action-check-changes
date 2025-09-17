@@ -1,32 +1,160 @@
-name: "No-op Action"
+name: "Check changes"
 author: "Arbeidstilsynet"
-description: "A no-op GitHub Action that echoes inputs and sets outputs."
+description: "Check if specified paths changed since last successful run of a workflow"
 
 inputs:
-  input-one:
-    description: "First input value"
+  include:
+    description: Newline separated list of Git pathspecs to include
     required: true
-  input-two:
-    description: "Second input value"
+  exclude:
+    description: Newline separated list of Git pathspecs to exclude
     required: false
-    default: "default-value"
+    default: ""
+  workflow-file:
+    description: Workflow file (e.g. deploy.yml) whose last successful run determines the base commit
+    required: false
 
 outputs:
-  output-one:
-    description: "Echo of input-one"
-    value: ${{ steps.noop.outputs.output-one }}
-  output-two:
-    description: "Echo of input-two"
-    value: ${{ steps.noop.outputs.output-two }}
+  changes_detected:
+    description: "true if any included (and not excluded) paths changed"
+    value: ${{ steps.diff.outputs.changed }}
+  base_sha:
+    description: Base commit used for diff
+    value: ${{ steps.base.outputs.base_sha }}
+  head_sha:
+    description: Current HEAD sha
+    value: ${{ steps.base.outputs.head_sha }}
+  changed_files:
+    description: Newline separated list of changed files after exclusions
+    value: ${{ steps.diff.outputs.changed_files }}
 
 runs:
-  using: "composite"
+  using: composite
   steps:
-    - name: Echo inputs and set outputs
-      id: noop
+    - name: Determine base (last successful run)
+      id: base
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+
+        # Resolve workflow file (input or auto-detect)
+        if [ -n "${{ inputs.workflow-file }}" ]; then
+          WF_FILE='${{ inputs.workflow-file }}'
+        else
+          WF_FILE=$(echo "${GITHUB_WORKFLOW_REF:-}" | sed -n 's#.*/\.github/workflows/\([^@]*\)@.*#\1#p')
+        fi
+
+        if [ -n "$WF_FILE" ]; then
+          echo "Workflow file: $WF_FILE"
+        else
+          echo "No workflow file name available (cannot query runs)."
+        fi
+
+        BRANCH='${{ github.ref_name }}'
+        HEAD_SHA=$(git rev-parse HEAD)
+        BASE_SHA=""
+        LAST_SUCCESS=""
+
+        if [ -n "$WF_FILE" ] && command -v gh >/dev/null 2>&1; then
+          echo "Fetching workflow runs (branch=$BRANCH)..."
+          set +e # handle gh api failures gracefully
+          API_OUTPUT=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}2/runs?branch=${BRANCH}" 2>&1)
+          RC=$?
+          echo "RC=$RC"
+          set -e
+
+          if [ $RC -ne 0 ]; then
+            if echo "$API_OUTPUT" | grep -q '"status": *"404"' || echo "$API_OUTPUT" | grep -qi 'Not Found'; then
+              echo "Workflow not found (404) - treating as no prior runs."
+              API_OUTPUT=""
+            else
+              echo "gh api failed (exit $RC). Output:"
+              echo "$API_OUTPUT"
+              exit 1
+            fi
+          fi
+
+          if [ -z "$API_OUTPUT" ]; then
+            echo "No workflow runs data."
+          else
+            RUNS=$(echo "$API_OUTPUT" | jq -r '(.workflow_runs? // []) | length' 2>/dev/null || echo 0)
+            echo "Detected $RUNS run(s)."
+            LAST_SUCCESS=$(echo "$API_OUTPUT" | jq -r '(.workflow_runs? // []) | map(select(.conclusion=="success")) | .[0].head_sha // empty' 2>/dev/null || echo "")
+            echo "Last successful commit SHA: ${LAST_SUCCESS:-none}"
+          fi
+        else
+          echo "Skipping API lookup (missing workflow file or gh CLI)."
+        fi
+
+        if [ -z "$LAST_SUCCESS" ]; then
+          echo "No previous successful run; using first commit as base."
+          BASE_SHA=$(git rev-list --max-parents=0 HEAD)
+        else
+          BASE_SHA="$LAST_SUCCESS"
+        fi
+
+        echo "Base SHA: $BASE_SHA"
+        echo "Head SHA: $HEAD_SHA"
+
+        {
+          echo "base_sha=$BASE_SHA"
+          echo "head_sha=$HEAD_SHA"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Compute diff
+      id: diff
       shell: bash
       run: |
-        echo "input-one: ${{ inputs.input-one }}"
-        echo "input-two: ${{ inputs.input-two }}"
-        echo "output-one=${{ inputs.input-one }}" >> $GITHUB_OUTPUT
-        echo "output-two=${{ inputs.input-two }}" >> $GITHUB_OUTPUT
+        set -euo pipefail
+        BASE_SHA='${{ steps.base.outputs.base_sha }}'
+        HEAD_SHA='${{ steps.base.outputs.head_sha }}'
+        INCLUDE_RAW='${{ inputs.include }}'
+        EXCLUDE_RAW='${{ inputs.exclude }}'
+
+        if [ -z "$INCLUDE_RAW" ]; then
+          echo "No include paths provided" >&2
+          exit 1
+        fi
+
+        # New: only split on newlines so patterns may contain spaces.
+        norm_list () {
+          # Read stdin, trim leading/trailing whitespace, drop empty lines, dedupe.
+          sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' | sort -u
+        }
+
+        mapfile -t INCLUDES < <(printf "%s\n" "$INCLUDE_RAW" | norm_list)
+        mapfile -t EXCLUDES < <(printf "%s\n" "$EXCLUDE_RAW" | norm_list)
+
+        echo "Include patterns:"
+        printf '  %s\n' "${INCLUDES[@]}"
+        if [ ${#EXCLUDES[@]} -gt 0 ]; then
+          echo "Exclude patterns:"
+          printf '  %s\n' "${EXCLUDES[@]}"
+        else
+          echo "No exclude patterns."
+        fi
+
+        EXCLUDE_SPEC=()
+        for p in "${EXCLUDES[@]}"; do
+          EXCLUDE_SPEC+=(":(exclude)$p")
+        done
+
+        git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- "${INCLUDES[@]}" "${EXCLUDE_SPEC[@]}" > /tmp/changed_files || true
+
+        if [ -s /tmp/changed_files ]; then
+          CHANGED=true
+        else
+          CHANGED=false
+        fi
+
+        echo "Changed: $CHANGED"
+        cat /tmp/changed_files || true
+
+        {
+          echo "changed=$CHANGED"
+          printf "changed_files="
+          awk '{printf "%s%s", NR==1?"":"%0A", $0}' /tmp/changed_files
+          echo
+        } >> "$GITHUB_OUTPUT"

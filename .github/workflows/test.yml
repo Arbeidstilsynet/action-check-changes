@@ -1,0 +1,43 @@
+on:
+  push:
+    branches:
+      - feat/add-action
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: "./"
+        id: changes
+        with:
+          workflow-file: "main.yml"
+          include: .github/workflows/
+          exclude: |
+            .github/workflows/test2.yml
+            README.md
+            somefile
+
+      - run: |
+          echo "Changed: ${{ steps.changes.outputs.changes_detected }}"
+          echo "Base SHA: ${{ steps.changes.outputs.base_sha }}"
+          echo "Head SHA: ${{ steps.changes.outputs.head_sha }}"
+          echo "Changed files: ${{ steps.changes.outputs.changed_files }}"
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.changes_detected == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - run: echo "insert deploy here"
