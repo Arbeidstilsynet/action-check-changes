@@ -63,13 +63,13 @@ runs:
 
 
         # Resolve workflow file (input or auto-detect)
-        if [ -n "${{ inputs.workflow-file }}" ]; then
+        if [[ -n "${{ inputs.workflow-file }}" ]]; then
           WF_FILE='${{ inputs.workflow-file }}'
         else
           WF_FILE=$(echo "${GITHUB_WORKFLOW_REF:-}" | sed -n 's#.*/\.github/workflows/\([^@]*\)@.*#\1#p')
         fi
 
-        if [ -n "$WF_FILE" ]; then
+        if [[ -n "$WF_FILE" ]]; then
           echo "Workflow file: $WF_FILE"
         else
           echo "No workflow file name available (cannot query runs)."
@@ -80,7 +80,7 @@ runs:
         BASE_SHA=""
         LAST_SUCCESS=""
 
-        if [ -n "$WF_FILE" ] && command -v gh >/dev/null 2>&1; then
+        if [[ -n "$WF_FILE" ]] && command -v gh >/dev/null 2>&1; then
           echo "Fetching workflow runs (branch=$BRANCH)..."
           set +e # handle gh api failures gracefully
           API_OUTPUT=$(gh api "repos/${{ github.repository }}/actions/workflows/${WF_FILE}/runs?branch=${BRANCH}" 2>&1)
@@ -88,7 +88,7 @@ runs:
           echo "RC=$RC"
           set -e
 
-          if [ $RC -ne 0 ]; then
+          if [[ $RC -ne 0 ]]; then
             if echo "$API_OUTPUT" | grep -q '"status": *"404"' || echo "$API_OUTPUT" | grep -qi 'Not Found'; then
               echo "Workflow not found (404) - treating as no prior runs."
               API_OUTPUT=""
@@ -99,7 +99,7 @@ runs:
             fi
           fi
 
-          if [ -z "$API_OUTPUT" ]; then
+          if [[ -z "$API_OUTPUT" ]]; then
             echo "No workflow runs data."
           else
             RUNS=$(echo "$API_OUTPUT" | jq -r '(.workflow_runs? // []) | length' 2>/dev/null || echo 0)
@@ -111,7 +111,7 @@ runs:
           echo "Skipping API lookup (missing workflow file or gh CLI)."
         fi
 
-        if [ -z "$LAST_SUCCESS" ]; then
+        if [[ -z "$LAST_SUCCESS" ]]; then
           echo "No previous successful run; using first commit as base."
           BASE_SHA=$(git rev-list --max-parents=0 HEAD)
         else
@@ -136,7 +136,7 @@ runs:
         INCLUDE_RAW='${{ inputs.include }}'
         EXCLUDE_RAW='${{ inputs.exclude }}'
 
-        if [ -z "$INCLUDE_RAW" ]; then
+        if [[ -z "$INCLUDE_RAW" ]]; then
           echo "No include paths provided" >&2
           exit 1
         fi
@@ -152,7 +152,7 @@ runs:
 
         echo "Include patterns:"
         printf '  %s\n' "${INCLUDES[@]}"
-        if [ ${#EXCLUDES[@]} -gt 0 ]; then
+        if [[ ${#EXCLUDES[@]} -gt 0 ]]; then
           echo "Exclude patterns:"
           printf '  %s\n' "${EXCLUDES[@]}"
         else
@@ -166,7 +166,7 @@ runs:
 
         git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- "${INCLUDES[@]}" "${EXCLUDE_SPEC[@]}" > /tmp/changed_files || true
 
-        if [ -s /tmp/changed_files ]; then
+        if [[ -s /tmp/changed_files ]]; then
           CHANGED=true
         else
           CHANGED=false
