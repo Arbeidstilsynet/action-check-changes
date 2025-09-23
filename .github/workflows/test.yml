@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - fix/revert-api-debug
+      - feat/basic-diff
 
 jobs:
   check:
@@ -23,7 +23,7 @@ jobs:
           workflow-file: "main.yml"
           include: .github/workflows/
           exclude: |
-            .github/workflows/test2.yml
+            .github/workflows/test-basic.yml
             README.md
             somefile
 

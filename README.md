@@ -1,12 +1,12 @@
 # Arbeidstilsynet/action-check-changes
 
-Action to check for changes to files. The main mode is automatically comparing since last successful workflow run. This action can also be used for basic comparison to a chosen `base-ref`, skipping the lookup of workflow runs.
+Action to check for changes to files. The main mode is automatically comparing to last successful workflow run in the same branch. This action can also be used for basic comparison to a chosen `base-ref`, skipping the lookup of workflow runs.
 
 This action can be used for safe continuous delivery/deployment taking into consideration previous runs.
 
 Resolution order for base commit:
 
-1. `base-ref` if provided (resolved via `git rev-parse`, fetched if missing).
+1. `base-ref` if provided.
 2. Last successful run of `workflow-file` (explicit or auto-detected).
 3. Repository root (first) commit.
 
