@@ -20,7 +20,7 @@ jobs:
       - uses: "./"
         id: changes
         with:
-          workflow-file: "main.yml"
+          workflow-file: "test.yml"
           include: .github/workflows/
           exclude: |
             .github/workflows/test-basic.yml
