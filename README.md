@@ -4,7 +4,7 @@ Action to check for changes to files.
 
 The main mode is automatically comparing to last successful workflow run in the same branch. This can be used for safe continuous delivery/deployment taking into consideration previous runs.
 
-It can also be used for direct comparison to a chosen `base-ref`, skipping the lookup of workflow runs.
+This action can also do direct comparison to a chosen `base-ref`, skipping the lookup of workflow runs.
 
 Resolution order for base commit:
 
