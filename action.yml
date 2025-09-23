@@ -43,7 +43,7 @@ runs:
       run: |
         set -euo pipefail
 
-        PROVIDED_BASE_REF='${{ inputs["base-ref"] }}'
+        PROVIDED_BASE_REF="${{ inputs['base-ref'] }}"
 
         # Early path: explicit base-ref supplied
         if [[ -n "$PROVIDED_BASE_REF" ]]; then
