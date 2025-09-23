@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - feat/never-ran-this-before
+      - feat/basic-diff
 
 jobs:
   check:
@@ -10,33 +10,22 @@ jobs:
     permissions:
       contents: read
       actions: read
-    outputs:
-      changed: ${{ steps.changes.outputs.changed }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
 
-      - uses: "Arbeidstilsynet/action-check-changes@feat/add-action"
+      - uses: Arbeidstilsynet/action-check-changes@feat/basic-diff
         id: changes
         with:
+          base-ref: origin/main
           include: |
             .
           exclude: |
-            .github/workflows/
             README.md
 
       - run: |
-          echo "Changed: ${{ steps.changes.outputs.changed_files }}"
+          echo "Changed: ${{ steps.changes.outputs.changes_detected }}"
           echo "Base SHA: ${{ steps.changes.outputs.base_sha }}"
           echo "Head SHA: ${{ steps.changes.outputs.head_sha }}"
           echo "Changed files: ${{ steps.changes.outputs.changed_files }}"
-
-  deploy:
-    needs: check
-    if: needs.check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-
-      - run: echo "insert deploy here"

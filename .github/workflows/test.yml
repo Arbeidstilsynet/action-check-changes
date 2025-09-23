@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - fix/revert-api-debug
+      - feat/basic-diff
 
 jobs:
   check:
@@ -11,7 +11,7 @@ jobs:
       contents: read
       actions: read
     outputs:
-      changed: ${{ steps.changes.outputs.changed }}
+      changed: ${{ steps.changes.outputs.changes_detected }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
@@ -20,10 +20,10 @@ jobs:
       - uses: "./"
         id: changes
         with:
-          workflow-file: "main.yml"
+          workflow-file: "test.yml"
           include: .github/workflows/
           exclude: |
-            .github/workflows/test2.yml
+            .github/workflows/test-basic.yml
             README.md
             somefile
 
@@ -35,7 +35,7 @@ jobs:
 
   deploy:
     needs: check
-    if: needs.check.outputs.changes_detected == 'true'
+    if: needs.check.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
