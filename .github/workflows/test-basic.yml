@@ -11,7 +11,7 @@ jobs:
       contents: read
       actions: read
     outputs:
-      changed: ${{ steps.changes.outputs.changed }}
+      changed: ${{ steps.changes.outputs.changes_detected }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
@@ -27,7 +27,7 @@ jobs:
             README.md
 
       - run: |
-          echo "Changed: ${{ steps.changes.outputs.changed_files }}"
+          echo "Changed: ${{ steps.changes.outputs.changes_detected }}"
           echo "Base SHA: ${{ steps.changes.outputs.base_sha }}"
           echo "Head SHA: ${{ steps.changes.outputs.head_sha }}"
           echo "Changed files: ${{ steps.changes.outputs.changed_files }}"
