@@ -18,7 +18,7 @@ jobs:
       - uses: Arbeidstilsynet/action-check-changes@feat/basic-diff
         id: changes
         with:
-          base-ref: main
+          base-ref: origin/main
           include: |
             .
           exclude: |
