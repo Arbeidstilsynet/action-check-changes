@@ -10,8 +10,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-    outputs:
-      changed: ${{ steps.changes.outputs.changes_detected }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
@@ -20,7 +18,7 @@ jobs:
       - uses: Arbeidstilsynet/action-check-changes@feat/basic-diff
         id: changes
         with:
-          base-ref: origin/main
+          base-ref: main
           include: |
             .
           exclude: |
@@ -31,12 +29,3 @@ jobs:
           echo "Base SHA: ${{ steps.changes.outputs.base_sha }}"
           echo "Head SHA: ${{ steps.changes.outputs.head_sha }}"
           echo "Changed files: ${{ steps.changes.outputs.changed_files }}"
-
-  deploy:
-    needs: check
-    if: needs.check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-
-      - run: echo "insert deploy here"
