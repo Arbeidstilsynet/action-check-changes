@@ -13,6 +13,10 @@ inputs:
   workflow-file:
     description: Workflow file (e.g. deploy.yml) whose last successful run determines the base commit
     required: false
+  base-ref:
+    description: Git ref (commit SHA, branch, tag, or remote ref like origin/main) to use directly as base. Skips workflow run lookup if set.
+    required: false
+    default: ""
 
 outputs:
   changes_detected:
@@ -31,13 +35,32 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Determine base (last successful run)
+    - name: Determine base
       id: base
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
+
+        PROVIDED_BASE_REF='${{ inputs["base-ref"] }}'
+
+        # Early path: explicit base-ref supplied
+        if [[ -n "$PROVIDED_BASE_REF" ]]; then
+          echo "Base ref provided: $PROVIDED_BASE_REF"
+          if ! BASE_SHA=$(git rev-parse --verify "$PROVIDED_BASE_REF^{commit}" 2>/dev/null); then
+            echo "Failed to resolve provided base ref: $PROVIDED_BASE_REF" >&2
+            exit 1
+          fi
+          HEAD_SHA=$(git rev-parse HEAD)
+          echo "Using provided base SHA: $BASE_SHA"
+          {
+            echo "base_sha=$BASE_SHA"
+            echo "head_sha=$HEAD_SHA"
+          } >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
 
         # Resolve workflow file (input or auto-detect)
         if [ -n "${{ inputs.workflow-file }}" ]; then

@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - feat/never-ran-this-before
+      - feat/basic-diff
 
 jobs:
   check:
@@ -17,13 +17,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: "Arbeidstilsynet/action-check-changes@feat/add-action"
+      - uses: Arbeidstilsynet/action-check-changes@feat/basic-diff
         id: changes
         with:
+          base-ref: origin/main
           include: |
             .
           exclude: |
-            .github/workflows/
             README.md
 
       - run: |
