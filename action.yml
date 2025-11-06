@@ -48,12 +48,18 @@ runs:
         # Early path: explicit base-ref supplied
         if [[ -n "$PROVIDED_BASE_REF" ]]; then
           echo "Base ref provided: $PROVIDED_BASE_REF"
-          if ! BASE_SHA=$(git rev-parse --verify "$PROVIDED_BASE_REF^{commit}" 2>/dev/null); then
+
+          # Check for null SHA (first commit scenario)
+          if [[ "$PROVIDED_BASE_REF" == "0000000000000000000000000000000000000000" ]]; then
+            echo "Base ref is null SHA (first commit) - using first commit as base"
+            BASE_SHA=$(git rev-list --max-parents=0 HEAD)
+          elif ! BASE_SHA=$(git rev-parse --verify "$PROVIDED_BASE_REF^{commit}" 2>/dev/null); then
             echo "Failed to resolve provided base ref: $PROVIDED_BASE_REF" >&2
             exit 1
           fi
+
           HEAD_SHA=$(git rev-parse HEAD)
-          echo "Using provided base SHA: $BASE_SHA"
+          echo "Using base SHA: $BASE_SHA"
           {
             echo "base_sha=$BASE_SHA"
             echo "head_sha=$HEAD_SHA"
