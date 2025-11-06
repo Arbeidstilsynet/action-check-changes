@@ -118,7 +118,7 @@ runs:
 
         if [[ -z "$LAST_SUCCESS" ]]; then
           echo "No previous successful run; using first commit as base."
-          BASE_SHA=$(git rev-list --max-parents=0 HEAD)
+          BASE_SHA=$(git rev-list --max-parents=0 --max-count=1 HEAD)
         else
           BASE_SHA="$LAST_SUCCESS"
         fi
