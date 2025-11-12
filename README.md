@@ -12,12 +12,6 @@ Resolution order for base commit:
 2. Last successful run of `workflow-file` (explicit or auto-detected).
 3. Repository root (first) commit.
 
-## Versioning
-
-This repository uses a simple versioning system based on the `VERSION` file.
-When you update the `VERSION` file and push to `main`, a Git tag with that version is created or updated automatically by the workflow.
-If you have to make breaking changes to the action, bump the version.
-
 ## Requirements
 
 Requires full commit history. When configuring [actions/checkout](https://github.com/actions/checkout), make sure to set `fetch-depth: 0`.
@@ -100,3 +94,9 @@ jobs:
             apps/web
             .github/workflows/ci.yml
 ```
+
+## Versioning
+
+This repository uses a simple versioning system based on the `VERSION` file.
+When you update the `VERSION` file and push to `main`, a Git tag with that version is created or updated automatically by the workflow.
+If you make breaking changes to the action, bump the version and update `CHANGELOG.md`.
